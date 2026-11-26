@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Unlicense
+# SPDX-License-Identifier: MIT
 """Writes shim/gamma_tables.h. The tables are made here so that the handheld never has to call pow()."""
 import os
 GAMMAS = range(6, 17)    # tenths
-out = ['/* Made by tools/make-gamma.py. Do not edit. out = 255 * (in / 255) ^ (1 / gamma), gamma 0.6 to 1.6. */',
+out = ['/* SPDX-License-Identifier: MIT */',
+       '/* Made by tools/make-gamma.py. Do not edit. out = 255 * (in / 255) ^ (1 / gamma), gamma 0.6 to 1.6. */',
        'static const unsigned char dm_gamma_tables[%d][256] = {' % len(GAMMAS)]
 for g in GAMMAS:
     vals = [int(255 * (i / 255) ** (10 / g) + 0.5) for i in range(256)]

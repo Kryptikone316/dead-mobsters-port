@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
 # qrun.sh <rundir> [args...]: run fxi.mipsel (or $QRUN_BIN, e.g. launcher.mipsel) in <rundir> under
 # qemu-user (via the host), env from the caller
 RD="$(cd "$1" && pwd)"; shift

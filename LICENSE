@@ -1,29 +1,32 @@
-This is free and unencumbered software released into the public domain.
+MIT License
 
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a compiled
-binary, for any purpose, commercial or non-commercial, and by any
-means.
+Copyright (c) 2026 AthruZ (Kryptikone316)
 
-In jurisdictions that recognize copyright laws, the author or authors
-of this software dedicate any and all copyright interest in the
-software to the public domain. We make this dedication for the benefit
-of the public at large and to the detriment of our heirs and
-successors. We intend this dedication to be an overt act of
-relinquishment in perpetuity of all present and future copyright
-interest in the software under copyright law.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-For more information, please refer to <https://unlicense.org>
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-This licence covers only what is written for this port under it: tools/, build_sf3500.sh, package.sh and
-package-src/ (not the box art). It does not cover the author's game (game/), the Fenix interpreter
-(fenix080/), the layer that links into it (shim/) and the launcher (launcher/), both GPL version 2 or later, the
-SF3500 glue and patches (sf3500/), or the bundled third-party components: see README.md, licenses/CREDITS.txt and licenses/.
+----
+
+This licence covers what is written for this port that is not part of the game interpreter: the launcher
+(launcher/launcher.c), the settings code it shares with the game (shim/dm_settings.c, shim/dm_settings.h,
+shim/gamma_tables.h), tools/, build_sf3500.sh, package.sh and the scripts and documents in package-src/.
+
+It does not cover the author's game (game/), the box art, the Fenix interpreter (fenix080/), the rest of shim/,
+which is built into that interpreter (GPL version 2 or later; two SDL 1.2 headers there are LGPL), the SF3500
+glue and patches (sf3500/), the font data in launcher/font_data.h (DejaVu fonts licence) or the bundled
+third-party components: see README.md, licenses/CREDITS.txt and licenses/.

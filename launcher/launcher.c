@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later
+/* SPDX-License-Identifier: MIT
  *
  * Dead Mobsters launcher for the SF3500: Launch Game, Stage Select, Settings, Exit Game.
  *

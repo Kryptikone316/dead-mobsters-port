@@ -1,5 +1,5 @@
 #!/bin/bash
-# SPDX-License-Identifier: Unlicense
+# SPDX-License-Identifier: MIT
 # Assembles package/ (what goes on the card under roms/ports) from build/ and the author's game files.
 set -eu
 HERE="$(cd "$(dirname "$0")" && pwd)"

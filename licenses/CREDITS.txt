@@ -3,12 +3,13 @@ Dead Mobsters
   as possible (game/readme.txt). The contents of the game files in this port are unchanged.
 
 Dead Mobsters for the SF3500 (this port: shim, build scripts, packaging)
-  (c) 2026 AthruZ (Kryptikone316). The shim (shim/) links into the Fenix interpreter and is under the GPL, version 2
-  or later, like Fenix; the scripts and packaging files are under the Unlicense (LICENSE).
+  (c) 2026 AthruZ (Kryptikone316). The part of shim/ that links into the Fenix interpreter is under the GPL, version 2
+  or later, like Fenix. The settings code it shares with the launcher (dm_settings, gamma tables), the tools, scripts
+  and packaging files are under the MIT licence (port-mit.txt).
 
 Launcher (launcher/)
-  (c) 2026 AthruZ (Kryptikone316), GNU General Public License version 2 or later. Its font data is made from the
-  DejaVu fonts (dejavu-fonts.txt).
+  (c) 2026 AthruZ (Kryptikone316), MIT licence (port-mit.txt). Its font data is made from the DejaVu fonts and is
+  under their licence (dejavu-fonts.txt).
 
 Interpreter
   Fenix 0.80, (c) 1999 Jose Luis Cebrian Pague, (c) 2002 Fenix Team, GNU General Public License version 2 or later

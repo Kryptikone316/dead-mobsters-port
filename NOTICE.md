@@ -14,7 +14,7 @@
   copy of the menu pictures. The source of the interpreter
   and the layer is at https://github.com/Kryptikone316/dead-mobsters-port (in the ports collection, the `source/`
   submodule).
-* **`launcher.mipsel`** is the port's launcher (GPL version 2 or later, source in `launcher/`). It contains no game
+* **`launcher.mipsel`** is the port's launcher (MIT licence, source in `launcher/`). It contains no game
   art: it reads the title and stage pictures from the game's files when it runs. Its lettering is pre-drawn from the
   DejaVu fonts (`licenses/dejavu-fonts.txt`).
 * SDL2 and SDL2_mixer (zlib licence), libxmp-lite (MIT), libpng and zlib are linked in. The licence texts are in

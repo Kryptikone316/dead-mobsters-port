@@ -128,5 +128,7 @@ same hooks (its letters are listed at the top of `launcher/launcher.c`).
 ## Licences
 
 The game is the author's freeware; its readme (`game/readme.txt`) asks for it to be distributed to as many people
-as possible. The Fenix interpreter and the shim are GPL version 2 or later; the glue in `sf3500/` is derived from
-TreeFrogUI's SF3000 code; scripts and packaging are under the Unlicense. See `licenses/CREDITS.txt`.
+as possible. The Fenix interpreter and the part of `shim/` built into it are GPL version 2 or later. The launcher,
+the settings code it shares with the game, the tools and the scripts are under the MIT licence (`LICENSE`). The
+glue in `sf3500/` is derived from TreeFrogUI's SF3000 code; the launcher's font data is under the DejaVu fonts'
+licence. See `licenses/CREDITS.txt`.

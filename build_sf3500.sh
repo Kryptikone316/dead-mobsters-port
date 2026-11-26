@@ -1,5 +1,5 @@
 #!/bin/bash
-# SPDX-License-Identifier: Unlicense
+# SPDX-License-Identifier: MIT
 # Builds fxi.mipsel, the Fenix 0.80 interpreter for the SF3500 (MIPS32r2, little endian), and the port's
 # launcher.mipsel into build-sf3500/.
 #

@@ -1,5 +1,5 @@
 #!/bin/sh
-# SPDX-License-Identifier: Unlicense
+# SPDX-License-Identifier: MIT
 set -u
 
 PORT_DIR=/mnt/sdcard/roms/ports/dead-mobsters

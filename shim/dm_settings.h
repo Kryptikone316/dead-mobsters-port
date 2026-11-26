@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later
+/* SPDX-License-Identifier: MIT
  *
  * The settings the launcher writes and the game reads, and the small files the two use to talk to
  * each other. All of them live in the port's folder. Plain C, no SDL.

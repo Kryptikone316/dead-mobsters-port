@@ -1,5 +1,5 @@
 /* Made by tools/make-fonts.py from the DejaVu fonts (licenses/dejavu-fonts.txt). Do not edit.
- * One byte of coverage per pixel, ASCII 32 to 126. */
+ * One byte of coverage per pixel, ASCII 32 to 126. The glyph data is under the DejaVu fonts' licence. */
 struct glyph { short width, advance, left; int at; };
 struct font { int height; const struct glyph *glyphs; const unsigned char *alpha; };
 static const unsigned char font_title_alpha[] = {

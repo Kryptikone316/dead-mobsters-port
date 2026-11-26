@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Unlicense
+# SPDX-License-Identifier: MIT
 """Small disassembler for Fenix 0.80 bytecode, for working out what a game does.
 usage: dcbdis.py <fenix080 dir> <game.dcb>"""
 import re, struct, sys

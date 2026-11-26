@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MIT */
 /* Made by tools/make-gamma.py. Do not edit. out = 255 * (in / 255) ^ (1 / gamma), gamma 0.6 to 1.6. */
 static const unsigned char dm_gamma_tables[11][256] = {
 	{ /* 0.6 */
