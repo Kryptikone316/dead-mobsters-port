@@ -48,4 +48,5 @@ The original game has neither of these. Both are done by the port's own layer; t
 * `log.txt` holds what the game printed on its last run. The message `File mobsters.prg not found` is normal: the
   compiled game mentions its source file, which the author did not publish.
 * `readme.txt` is the author's own readme (Windows instructions; the controls differ here).
+* The source, build instructions and licences: https://github.com/Kryptikone316/dead-mobsters-port
 * A few file names were changed to lower case (for example `01.FPG` to `01.fpg`) to match what the game asks for.
