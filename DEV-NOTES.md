@@ -56,6 +56,7 @@
 * Sprites 200-215 are 70-74 rows tall with the mobster in the top 37.
 * Tested in qemu (2026-11-26): new menu, EXIT entry, character 2, picture settings; unlock at the ending; stage
   mode for a sewer stage and the last boss (cleared with the W cheat), Select, Game Over timeout and Continue;
-  launcher locked / unlocked, settings saved, requests written; run.sh loop with stand-in programs. Not tested:
-  anything on the device, real audio, a stage cleared by playing it, the launcher-to-game handover.
+  launcher locked / unlocked, settings saved, requests written; run.sh loop with stand-in programs.
+* Device (SF3500, 2026-11-26): the launcher build tested by the port author and reported all working (the handover
+  to the game and back, settings, Stage Select).
 

@@ -6,8 +6,10 @@ factory, with a boss at the end of each. This repository ports it to the Datafro
 GPU, Linux, display driver and gamepad supplied by the TreeFrogUI front-end).
 
 The contents of the game's files are the author's, unchanged (`game/`; some file names are lower-cased to match
-what the game asks for). Only the interpreter is built here: the game ships as compiled Fenix 0.80 bytecode with
-no script source, so the **Fenix 0.80** interpreter (`fenix080/`, GPL) is built for the SF3500.
+what the game asks for). Two programs are built here. The game ships as compiled Fenix 0.80 bytecode with no
+script source, so the **Fenix 0.80** interpreter (`fenix080/`, GPL) is built for the SF3500 (`fxi.mipsel`). With it
+comes a small **launcher** written for this port (`launcher.mipsel`): Launch Game, Stage Select, Settings and
+Exit Game.
 
 ## The launcher
 
