@@ -16,6 +16,7 @@
 #include <SDL2/SDL_mixer.h>
 
 #include "../sf3500/hwaudio.h"
+#include "dm_settings.h"
 
 /* ---- error text shared with the video side ------------------------------------------------- */
 
@@ -37,9 +38,14 @@ int fxsdl_audio_init(void)
 	return 0;
 }
 
+static volatile int muted = 0;      /* while Stage Select hurries past the intro */
+
+void fxsdl_audio_mute(int on) { muted = on; }
+
 static void postmix(void *udata, Uint8 *stream, int len)
 {
 	(void)udata;
+	if (muted) memset(stream, 0, (size_t)len);
 	/* Opened as 48000 Hz, signed 16 bit, stereo: 4 bytes per frame. */
 	hwaudio_write((const short *)stream, len / 4);
 }
@@ -71,7 +77,15 @@ void fxmix_CloseAudio(void)
 
 Mix_Chunk *fxmix_LoadWAV(const char *file)
 {
-	return Mix_LoadWAV(file);
+	static struct dm_settings settings;
+	static int loaded = 0;
+	Mix_Chunk *chunk = Mix_LoadWAV(file);
+
+	if (!loaded) { dm_settings_load(&settings); loaded = 1; }
+	/* Each sound gets the volume for its kind; the game itself sets none. */
+	if (chunk)
+		Mix_VolumeChunk(chunk, dm_mix_volume(dm_is_music(file) ? settings.music : settings.sound));
+	return chunk;
 }
 
 /* Holds every sound and the music where they are; the audio output keeps running, silent. */

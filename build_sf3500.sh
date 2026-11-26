@@ -1,6 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: Unlicense
-# Builds fxi.mipsel, the Fenix 0.80 interpreter for the SF3500 (MIPS32r2, little endian), into build-sf3500/.
+# Builds fxi.mipsel, the Fenix 0.80 interpreter for the SF3500 (MIPS32r2, little endian), and the port's
+# launcher.mipsel into build-sf3500/.
 #
 # Needs the SF3500 MIPS toolchain, cmake, make and three upstream tarballs in $DEPS (see README.md):
 #
@@ -102,9 +103,11 @@ for f in files xctype; do
 done
 # what the port knows about this game's bytecode; built against fxi's own headers
 $CC $CFLAGS -std=gnu89 -I shim -I fenix080/fxi/inc -I fenix080/include -c shim/mobsters.c -o "$OUT/obj/mobsters.o"; objs="$objs $OUT/obj/mobsters.o"
+# settings shared with the launcher
+$CC $CFLAGS -std=gnu11 -I shim -c shim/dm_settings.c -o "$OUT/obj/dm_settings.o"; objs="$objs $OUT/obj/dm_settings.o"
 # the shim: the video/input side sees the SDL 1.2 look-alike, the audio side sees real SDL2
 $CC $CFLAGS -std=gnu11 -I shim -c shim/fxsdl.c -o "$OUT/obj/fxsdl.o"; objs="$objs $OUT/obj/fxsdl.o"
-$CC $CFLAGS -std=gnu11 -I"$SDL/include" -I"$MIX/include/SDL2" -c shim/fxsdl_audio.c -o "$OUT/obj/fxsdl_audio.o"; objs="$objs $OUT/obj/fxsdl_audio.o"
+$CC $CFLAGS -std=gnu11 -I shim -I"$SDL/include" -I"$MIX/include/SDL2" -c shim/fxsdl_audio.c -o "$OUT/obj/fxsdl_audio.o"; objs="$objs $OUT/obj/fxsdl_audio.o"
 for f in hwdisp hwaudio joykey; do
     $CC $CFLAGS -std=gnu11 -c "sf3500/$f.c" -o "$OUT/obj/$f.o"; objs="$objs $OUT/obj/$f.o"
 done
@@ -112,4 +115,11 @@ $CC $CFLAGS -rdynamic -o "$OUT/fxi" $objs \
     "$MIX/lib/libSDL2_mixer.a" "$SDL/lib/libSDL2.a" "$XMP/lib/libxmp-lite.a" \
     "$LIBDIR/libpng.so" "$LIBDIR/libz.so" -lm -ldl -lpthread
 "$STRIP" -o "$OUT/fxi.mipsel" "$OUT/fxi"
-echo; echo "Built: $(ls -l "$OUT/fxi.mipsel")"
+
+# 5. The launcher, on the same display, sound and pad layer.
+echo "== launcher"
+$CC $CFLAGS -std=gnu11 -I shim -I"$SDL/include" -I"$MIX/include/SDL2" -c launcher/launcher.c -o "$OUT/obj/launcher.o"
+$CC $CFLAGS -o "$OUT/launcher" "$OUT/obj/launcher.o" "$OUT/obj/dm_settings.o" "$OUT/obj/hwdisp.o" "$OUT/obj/hwaudio.o" "$OUT/obj/joykey.o" \
+    "$MIX/lib/libSDL2_mixer.a" "$SDL/lib/libSDL2.a" "$XMP/lib/libxmp-lite.a" -lm -ldl -lpthread
+"$STRIP" -o "$OUT/launcher.mipsel" "$OUT/launcher"
+echo; echo "Built: $(ls -l "$OUT/fxi.mipsel")"; echo "Built: $(ls -l "$OUT/launcher.mipsel")"

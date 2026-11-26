@@ -8,7 +8,7 @@ GAME_DIR="$HERE/game"
 OUT="${PKG:-$HERE/package}"
 rm -rf "$OUT"; mkdir -p "$OUT/dead-mobsters"
 P="$OUT/dead-mobsters"
-cp "$BUILD/fxi.mipsel" "$P/"
+cp "$BUILD/fxi.mipsel" "$BUILD/launcher.mipsel" "$P/"
 # the author's files, contents unchanged (not the Windows interpreter and DLLs, not mobsters.bat);
 # names are lower case in game/ because that is what mobsters.dcb asks for
 for f in mobsters.dcb font1.fnt readme.txt; do cp "$GAME_DIR/$f" "$P/"; done

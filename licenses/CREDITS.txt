@@ -6,6 +6,10 @@ Dead Mobsters for the SF3500 (this port: shim, build scripts, packaging)
   (c) 2026 AthruZ (Kryptikone316). The shim (shim/) links into the Fenix interpreter and is under the GPL, version 2
   or later, like Fenix; the scripts and packaging files are under the Unlicense (LICENSE).
 
+Launcher (launcher/)
+  (c) 2026 AthruZ (Kryptikone316), GNU General Public License version 2 or later. Its font data is made from the
+  DejaVu fonts (dejavu-fonts.txt).
+
 Interpreter
   Fenix 0.80, (c) 1999 Jose Luis Cebrian Pague, (c) 2002 Fenix Team, GNU General Public License version 2 or later
   (fenix-gpl-2.txt). Only two small changes: the PNG error jump uses png_jmpbuf(), and a stand-in direct.h

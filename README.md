@@ -9,20 +9,45 @@ The contents of the game's files are the author's, unchanged (`game/`; some file
 what the game asks for). Only the interpreter is built here: the game ships as compiled Fenix 0.80 bytecode with
 no script source, so the **Fenix 0.80** interpreter (`fenix080/`, GPL) is built for the SF3500.
 
+## The launcher
+
+Dead Mobsters opens in a small launcher made for this port:
+
+* **Launch Game** plays the game as the author made it, from the intro and title menu on. The title menu reads
+  **PLAY GAME** and **EXIT**; EXIT goes back to the launcher.
+* **Stage Select** unlocks once you have finished the whole game. It plays any one of the twelve stages (two
+  stages and a boss in each of the four areas). Clearing the stage brings you back to it in the launcher. After
+  Game Over you can continue as usual; Select, or letting the countdown run out, also goes back.
+* **Settings** chooses your mobster, sets the music and sound effect volumes, and adjusts brightness, contrast and
+  gamma. A picture test shows the effect: with good settings, all eight grey steps can be told apart.
+* **Exit Game** returns to the front-end.
+
+The volumes only turn the game's sounds down from how the author set them; use the handheld's volume buttons for
+overall loudness. Settings are saved when you leave the Settings screen.
+
 ## Controls
+
+In the launcher: D-pad to move and change values, A (or Start) to choose, B to go back, Select + Start to leave.
+
+In the game:
 
 | Button | Action |
 |---|---|
 | D-pad left and right | Walk |
 | B, or D-pad up | Jump |
 | A or Y | Shoot |
-| R1 or X / L1 | Next / previous weapon |
+| R1 or X | Next weapon |
+| L1 | Previous weapon |
 | D-pad up and down | Move through the title menu |
 | A or Start | Choose in the title menu; continue after Game Over |
 | Start, while playing | Pause and resume |
 | Start, during the intro | Skip it (after you have watched it once) |
-| Select | Back to the title menu while playing |
-| Select + Start | Leave the game at any time |
+| Select | Back to the title menu while playing (in Stage Select: back to the launcher) |
+| Select + Start | Leave the game and return to the launcher |
+
+A button such as A, B or Start moves past a story card. Holding fire when the game ends counts as "continue".
+
+The game's own cheat keys are not mapped.
 
 The author's readme says Ctrl shoots. The game itself tests **Alt** for shooting, and jumps on Space or Ctrl, so
 the buttons follow what the game does.
@@ -45,16 +70,27 @@ the small part of the SDL 1.2 API that Fenix uses, with every function renamed (
 
 ### Added by the port
 
-The original game has neither of these, and its files are not changed for them. `shim/mobsters.c` holds what
-the port knows about the game's bytecode: where the main program is waiting says whether the intro, the title
-menu or a level is on screen. Those positions are checked when the game runs; if they do not match, both
-features stay off.
+The original game has none of these, and its files are not changed for them. `shim/mobsters.c` holds what the
+port knows about the game's bytecode: where the main program is waiting says whether the intro, the title menu or
+a level is on screen. Those positions are checked when the game runs; if they do not match, these features stay
+off.
 
+* **Launcher** (`launcher/launcher.c`): a separate program on the same display, sound and pad layer. `run.sh`
+  runs it, then the game as it asked (`launch.txt`), then the launcher again. Settings are in `settings.cfg`
+  (`shim/dm_settings.c`, shared by both).
+* **Title menu:** the entries in the loaded menu pictures are redrawn as PLAY GAME and EXIT, and the pad moves a
+  cursor that sets the game's menu variable. That variable is where the game takes the character from.
+* **Settings in the game:** brightness, contrast and gamma are applied to the 8-bit palette, so they cost nothing
+  per frame (the gamma curves are tables made beforehand; nothing calls `pow` on the device). Each sound gets the
+  music or effects volume when it is loaded.
+* **Stage Select:** `SF3500_STAGE=<level>` sets the variables the game's own "continue" uses during the intro,
+  hurries through it on a black screen, and leaves when the level is cleared or the title menu would appear.
+  Reaching the ending story card in a normal game writes `game_completed`.
 * **Pause.** Start during a level. The shim waits inside the input poll, holds the sound, and hides the paused
   time from the game's clock.
 * **Intro skip.** The first time, the logo and title sequence play through. Reaching the title menu creates a
   file, `intro_seen`; from then on **PRESS START TO SKIP** is shown. The skip ends the intro's two timed waits
-  early, and the game's own code carries on to the menu. Delete `intro_seen` to make it unskippable again.
+  early, and the game's own code carries on to the menu.
 
 ## Build
 
@@ -67,11 +103,12 @@ You need the SF3500 MIPS toolchain, cmake, make, and three upstream tarballs in 
 | `libxmp-lite-4.6.0.tar.gz` | https://github.com/libxmp/libxmp/releases/download/libxmp-4.6.0/libxmp-lite-4.6.0.tar.gz |
 
 ```sh
-SF3500_TC=/path/to/toolchain/host ./build_sf3500.sh   # build-sf3500/fxi.mipsel
+SF3500_TC=/path/to/toolchain/host ./build_sf3500.sh   # build-sf3500/fxi.mipsel and launcher.mipsel
 ./package.sh                                          # package/ for the card's roms/ports
 ```
 
-On the device the game runs as `fxi.mipsel -b mobsters.dcb`. The executable's name must start with `fxi`.
+The generated font data and gamma tables are kept in the repository; `tools/make-fonts.py` (needs Pillow and the
+DejaVu fonts) and `tools/make-gamma.py` remake them. On the device the game runs as `fxi.mipsel -b mobsters.dcb`. The executable's name must start with `fxi`.
 
 ## Testing without the device
 
@@ -79,8 +116,9 @@ On the device the game runs as `fxi.mipsel -b mobsters.dcb`. The executable's na
 and the files from `game/`. Hooks (no cost unless set): `SF3500_KEYSCRIPT="1100:E:5,1300:J:6"`
 (frame:letter[:frames]; the letters are listed at the top of `shim/fxsdl.c`),
 `SF3500_SHOT_PREFIX=p SF3500_SHOT_FRAMES=100,200` (writes `p_100.ppm`...), `SF3500_QUIT_FRAME=n`,
-`SF3500_PAUSE_TEST_POLLS=n` (a pause ends by itself). Without `intro_seen` the title menu appears after about
-1000 frames.
+`SF3500_PAUSE_TEST_POLLS=n` (a pause ends by itself), `SF3500_STAGE=<level>`. Without `intro_seen` the title menu
+appears after about 1000 frames. `QRUN_BIN=launcher.mipsel tools/qrun.sh <folder>` runs the launcher, with the
+same hooks (its letters are listed at the top of `launcher/launcher.c`).
 
 `tools/dcbdis.py fenix080 game/mobsters.dcb` disassembles the game's bytecode. Developer notes:
 `DEV-NOTES.md`.

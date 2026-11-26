@@ -13,12 +13,17 @@
  *               poll, its clock does not advance, sound is held, and the last frame is shown dimmed.
  *   intro skip  the logo and title sequence must be watched through once (this writes the file
  *               "intro_seen" next to the game). On later runs a prompt is drawn and Start skips.
+ *   title menu  PLAY GAME / EXIT; the character comes from the launcher's settings.
+ *   settings    brightness, contrast and gamma are applied to the palette (settings.cfg).
+ *   completion  a game that reaches the ending writes "game_completed" (unlocks Stage Select).
+ *   stage mode  SF3500_STAGE=<level>: go straight to that level; leave when it is cleared, or
+ *               when the game would show its title menu.
  *
  * Test hooks (cost nothing unless the variable is set):
  *   SF3500_KEYSCRIPT="60:E,120:S:30"   press Enter at frame 60, Space at frame 120 for 30 frames
  *                                      (keys: E enter, S space, L/R/U/D arrows, C escape, F fire (Alt),
  *                                      K Ctrl, W the game's next-level cheat; pad buttons: A, T Start,
- *                                      N R1, P L1, J the B button, H D-pad up;
+ *                                      N R1, P L1, J the B button, H D-pad up, V D-pad down, X Select;
  *                                      3 frames by default)
  *   SF3500_SHOT_PREFIX=p               with SF3500_SHOT_FRAMES="100,200" writes p_<frame>.ppm
  *   SF3500_QUIT_FRAME=n                exits cleanly after n presented frames
@@ -33,6 +38,7 @@
 
 #include "SDL.h"
 #include "mobsters.h"
+#include "dm_settings.h"
 #include "../sf3500/joykey.h"
 #include "../sf3500/hwdisp.h"
 #include "../sf3500/hwaudio.h"
@@ -40,6 +46,7 @@
 extern int  fxsdl_audio_init(void);
 extern void fxsdl_audio_quit(void);
 extern void fxsdl_audio_pause(int on);
+extern void fxsdl_audio_mute(int on);
 
 /* ------------------------------------------------------------------------------------------- */
 /* timing                                                                                      */
@@ -77,9 +84,18 @@ static int quitting = 0;
 static const SDL_version linked = { SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL };
 const SDL_version *SDL_Linked_Version(void) { return &linked; }
 
+static void stage_init(void);
+static void load_settings(void);
+
 int SDL_Init(Uint32 flags)
 {
+	static int settings_read = 0;
 	now_us();
+	if (!settings_read) {
+		settings_read = 1;
+		load_settings();
+		stage_init();
+	}
 	if ((flags & SDL_INIT_VIDEO) && !video_up) {
 		joykey_init();
 		if (hwdisp_init() != 0)
@@ -118,11 +134,21 @@ static unsigned short pack565(int r, int g, int b)
 	return (unsigned short)(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3));
 }
 
+static struct dm_settings settings;
+static unsigned char colour_lut[256];
+
+static void load_settings(void)
+{
+	dm_settings_load(&settings);
+	dm_colour_lut(&settings, colour_lut);
+}
+
+/* The game's 8-bit colours pass through the picture settings here, fades included. */
 static void palette_changed(int first, int n)
 {
 	int i;
 	for (i = first; i < first + n && i < 256; i++)
-		pal565[i] = pack565(pal[i].r, pal[i].g, pal[i].b);
+		pal565[i] = pack565(colour_lut[pal[i].r], colour_lut[pal[i].g], colour_lut[pal[i].b]);
 }
 
 SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
@@ -259,6 +285,7 @@ static void write_ppm(const char *path, const unsigned short *rgb565, int w, int
 static const struct { char c; unsigned char r[7]; } font5x7[] = {
 	{ 'A', { 14, 17, 17, 31, 17, 17, 17 } }, { 'C', { 14, 17, 16, 16, 16, 17, 14 } },
 	{ 'D', { 30, 17, 17, 17, 17, 17, 30 } }, { 'E', { 31, 16, 16, 30, 16, 16, 31 } },
+	{ 'G', { 14, 17, 16, 23, 17, 17, 15 } },
 	{ 'I', { 14,  4,  4,  4,  4,  4, 14 } }, { 'K', { 17, 18, 20, 24, 20, 18, 17 } },
 	{ 'L', { 16, 16, 16, 16, 16, 16, 31 } }, { 'M', { 17, 27, 21, 21, 17, 17, 17 } },
 	{ 'O', { 14, 17, 17, 17, 17, 17, 14 } }, { 'P', { 30, 17, 17, 30, 16, 16, 16 } },
@@ -309,8 +336,9 @@ static void draw_skip_prompt(unsigned short *buf, int w, int h)
 	draw_text(buf, w, h, x, y, 1, SKIP_TEXT, 0xFFFF);
 }
 
-/* The last presented frame, dimmed, with the pause text. Only the 8-bit mode the game uses. */
-static void present_paused(void)
+/* The last presented frame, dimmed, with up to three lines over it. Only the 8-bit mode the game
+ * uses. The tag names the file the test hook writes. */
+static void present_banner(const char *title, const char *second, const char *third, const char *tag)
 {
 	static unsigned short *buf = NULL;
 	static int cap = 0;
@@ -324,13 +352,13 @@ static void present_paused(void)
 	}
 	if (!buf) return;
 	for (i = 0; i < n; i++) buf[i] = (unsigned short)((out565[i] >> 2) & 0x39E7);   /* a quarter as bright */
-	draw_label(buf, w, h, w / 2, h / 2 - 34, 4, "PAUSED", 0xFFFF);
-	draw_label(buf, w, h, w / 2, h / 2 + 14, 2, "START: RESUME", 0xFFE0);
-	draw_label(buf, w, h, w / 2, h / 2 + 36, 1, "SELECT + START: QUIT", 0xC618);
+	draw_label(buf, w, h, w / 2, h / 2 - (second ? 34 : 14), title && strlen(title) > 8 ? 3 : 4, title, 0xFFFF);
+	if (second) draw_label(buf, w, h, w / 2, h / 2 + 14, 2, second, 0xFFE0);
+	if (third) draw_label(buf, w, h, w / 2, h / 2 + 36, 1, third, 0xC618);
 	hwdisp_present(buf, w, h, w * 2);
 	if (getenv("SF3500_SHOT_PREFIX")) {
 		char path[512];
-		snprintf(path, sizeof(path), "%s_paused.ppm", getenv("SF3500_SHOT_PREFIX"));
+		snprintf(path, sizeof(path), "%s_%s.ppm", getenv("SF3500_SHOT_PREFIX"), tag);
 		write_ppm(path, buf, w, h, w);
 	}
 }
@@ -350,6 +378,22 @@ static int frame_listed(const char *list, unsigned frame)
 
 static int intro_seen = -1;           /* -1: not looked yet */
 static int skipping = 0;
+
+/* Stage mode (Stage Select): the level asked for, and whether we are still on the way to it. */
+static int stage = 0;
+static int stage_booting = 0;
+#define STAGE_BOOT_LIMIT 400          /* frames: never leave the screen black for good */
+
+static void stage_init(void)
+{
+	const char *e = getenv("SF3500_STAGE");
+	int n = e ? atoi(e) : 0;
+	if (n && dm_is_stage(n)) {
+		stage = n;
+		stage_booting = 1;
+		fprintf(stderr, "fxsdl: stage mode, level %d\n", stage);
+	}
+}
 
 static void present(void)
 {
@@ -377,6 +421,9 @@ static void present(void)
 		}
 		if (intro_seen == 1 && !skipping && mob_where() == MOB_INTRO)
 			draw_skip_prompt(out565, screen_surf.w, screen_surf.h);
+		/* Stage mode shows black until its level is up, and never shows the title menu. */
+		if (stage && (stage_booting || mob_where() == MOB_MENU))
+			memset(out565, 0, (size_t)screen_surf.w * screen_surf.h * 2);
 		src = out565; pitch = screen_surf.w * 2;
 	} else {
 		src = screen_surf.pixels; pitch = screen_surf.pitch;
@@ -492,6 +539,8 @@ static void load_script(void)
 		case 'A': pad = 1u << JK_A; break;
 		case 'J': pad = 1u << JK_B; break;     /* the jump button */
 		case 'H': pad = 1u << JK_UP; break;
+		case 'V': pad = 1u << JK_DOWN; break;
+		case 'X': pad = 1u << JK_SELECT; break;
 		}
 		e = end + 2;
 		if (*e == ':') hold = strtoul(e + 1, (char **)&e, 10);
@@ -585,7 +634,8 @@ static void pause_game(void)
 	for (;;) {
 		unsigned int bits;
 		int down;
-		if (polls % 10 == 0) present_paused();          /* now, and twice a second after */
+		if (polls % 10 == 0)                            /* now, and twice a second after */
+			present_banner("PAUSED", "START: RESUME", "SELECT + START: QUIT", "paused");
 		SDL_Delay(50);
 		polls++;
 		bits = pad_bits();
@@ -600,10 +650,79 @@ static void pause_game(void)
 	fprintf(stderr, "fxsdl: pause off\n");
 }
 
+/* ---- leaving, stage mode, completion ------------------------------------------------------ */
+
+static void leave_game(const char *why)
+{
+	fprintf(stderr, "fxsdl: %s\n", why);
+	SDL_Quit();
+	exit(0);
+}
+
+/* A short banner over the finished level, then back to whoever started the game. */
+static void stage_cleared(void)
+{
+	int polls;
+	fprintf(stderr, "fxsdl: stage cleared (level %d)\n", stage);
+	fxsdl_audio_pause(1);
+	for (polls = 0; polls < 60; polls++) {              /* 3 seconds */
+		if (polls % 10 == 0) present_banner("STAGE CLEAR", NULL, NULL, "cleared");
+		SDL_Delay(50);
+		quit_if_combo(pad_bits());
+	}
+	leave_game("stage complete, leaving");
+}
+
+static void stage_update(enum mob_place where)
+{
+	if (!stage) return;
+	if (stage_booting) {
+		fxsdl_audio_mute(1);
+		if (where == MOB_INTRO) {
+			mob_request_stage(stage, settings.mobster);
+			mob_end_intro_wait();
+		}
+		if ((where == MOB_IN_LEVEL && mob_level() == stage) || frames > STAGE_BOOT_LIMIT) {
+			stage_booting = 0;
+			fxsdl_audio_mute(0);
+		}
+		return;
+	}
+	if (mob_stage_cleared(stage)) stage_cleared();
+	/* Select, or letting the Game Over countdown run out, leads to the title menu. */
+	if (where == MOB_MENU) leave_game("back from the stage, leaving");
+}
+
+static void completion_update(void)
+{
+	static int written = 0;
+	if (written || stage || mob_level() != DM_ENDING_LEVEL || !mob_alive()) return;
+	written = 1;
+	if (access(DM_COMPLETED_FILE, F_OK) == 0) return;
+	if (dm_write_file(DM_COMPLETED_FILE, "The game has been finished. Stage Select is unlocked.\n") == 0)
+		fprintf(stderr, "fxsdl: game completed, Stage Select unlocked\n");
+}
+
+/* The title menu is PLAY GAME / EXIT. The pad moves this cursor, not the game's own: the game's
+ * menu variable is set to match, with PLAY GAME standing for the chosen character. Returns the
+ * pad bits the game may see. */
+static unsigned int menu_update(enum mob_place where, unsigned int bits)
+{
+	static int in_menu = 0, on_exit = 0;
+	if (where != MOB_ELSEWHERE) mob_prepare_menu();
+	if (where != MOB_MENU || stage) { in_menu = 0; return bits; }
+	if (!in_menu) { in_menu = 1; on_exit = 0; }
+	if (bits & (1u << JK_UP)) on_exit = 0;
+	if (bits & (1u << JK_DOWN)) on_exit = 1;
+	mob_menu_select(on_exit, settings.mobster);
+	return bits & ~((1u << JK_UP) | (1u << JK_DOWN) | (1u << JK_LEFT) | (1u << JK_RIGHT)
+	                | (1u << JK_L1) | (1u << JK_R1) | (1u << JK_X));
+}
+
 static void refresh_input(void)
 {
 	static unsigned int prevbits = 0;
-	static unsigned int start_before = 0;
+	static int start_before = -1;              /* -1: first poll */
 	static int swallow_start = 0;
 	unsigned int bits, start_now;
 	enum mob_place where;
@@ -617,14 +736,15 @@ static void refresh_input(void)
 	quit_if_combo(bits);
 
 	start_now = bits & (1u << JK_START);
-	new_press = start_now && !start_before && !(bits & (1u << JK_SELECT));
-	start_before = start_now;
+	/* A Start still held from the launcher is not a press. */
+	new_press = start_now && start_before == 0 && !(bits & (1u << JK_SELECT));
+	start_before = start_now != 0;
 
 	where = mob_where();
 	if (new_press && where == MOB_IN_LEVEL) {
 		pause_game();
 		bits = pad_bits();                          /* the Start press that resumed */
-		start_before = bits & (1u << JK_START);
+		start_before = (bits & (1u << JK_START)) != 0;
 		swallow_start = 1;
 	} else if (new_press && where == MOB_INTRO && intro_seen == 1) {
 		fprintf(stderr, "fxsdl: intro skipped\n");
@@ -632,6 +752,9 @@ static void refresh_input(void)
 		swallow_start = 1;
 	}
 	intro_update(where);
+	completion_update();
+	stage_update(where);
+	bits = menu_update(where, bits);
 
 	/* A Start press used for pause or skip must not also reach the game as Enter (it would
 	 * pick an entry in the title menu), so it is hidden until the button is let go. */

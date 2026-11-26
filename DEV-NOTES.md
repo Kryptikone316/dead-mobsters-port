@@ -35,3 +35,27 @@
   run B did not jump; on the next, with the B code unchanged, it did (the pad word read bit 14 as expected).
   Cause not known.
 * The build links libxmp-lite through SDL2_mixer although the game has only WAV sounds.
+
+## Launcher, title menu, settings, Stage Select
+
+* Levels (global 1684): 1 opening card, 2 "The Suburbs" card, 3 4 stages, 5 "Oh No!", 6 boss; 7 card, 8 9, 10,
+  11 boss; 12 card, 13 14, 15, 16 boss; 17 card, 18 19, 20, 21 boss; 22 ending card, 23 flying cutscene. Every
+  level is built to start on its own (the game's continue starts any of them).
+* Level complete = global 1844 = 1, however it is reached (goal: proc47; bosses: proc15; last boss: proc79).
+  Stage mode sees it while the main process waits at 5278, before the loop moves on.
+* "Continue" is globals 1656 = 1 and 1660 = level; 1656 = 1 skips the title menu. Stage mode sets both, and
+  1604 (character), during the intro's first wait.
+* Character: global 1608, set from the menu entry 1604; read only by the player's own processes, and it only
+  picks sprite numbers. Both "starts" are one-player. The "1UP" tag marks 50 frames of spawn protection.
+* Menu pictures: graphs 15 / 16 / 17 of deadmob.fpg (arrow on entry 1 / 2 / 3); text area x 133-186, rows
+  158-195; white 1 px strokes 8 high with a dark outline.
+* Sounds: names starting "low", and sewerlow.wav, are music (played with PLAY_WAV like any effect).
+* Launcher: ignores the pad until everything has been released (Select + Start from the game is still down when
+  it starts), and waits for release before it exits; the game likewise does not take a Start held at startup as
+  a new press (it would skip the intro).
+* Sprites 200-215 are 70-74 rows tall with the mobster in the top 37.
+* Tested in qemu (2026-11-26): new menu, EXIT entry, character 2, picture settings; unlock at the ending; stage
+  mode for a sewer stage and the last boss (cleared with the W cheat), Select, Game Over timeout and Continue;
+  launcher locked / unlocked, settings saved, requests written; run.sh loop with stand-in programs. Not tested:
+  anything on the device, real audio, a stage cleared by playing it, the launcher-to-game handover.
+
